@@ -1,0 +1,403 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+
+trigger:
+  - Master_Automation
+
+resources:
+   pipelines:
+   - pipeline: Surpass.CQT.BarChart # Name of the pipeline resource.
+     source: Surpass.CQT.BarChart # The name of the pipeline referenced by this pipeline resource.
+     trigger: 
+       branches:
+        include:
+          - 'refs/heads/master'
+   - pipeline: Surpass.CQT.Graph
+     source: Surpass.CQT.Graph
+     trigger:
+      branches:
+       include:
+         - 'refs/heads/master'
+   - pipeline: Surpass.CQT.PieChart
+     source: Surpass.CQT.PieChart
+     trigger:
+      branches:
+       include:
+         - 'refs/heads/master'
+   - pipeline: Surpass.CQT.GraphSelector
+     source: Surpass.CQT.GraphSelector
+     trigger:
+      branches:
+       include:
+         - 'refs/heads/master'
+
+   - pipeline: Surpass.CQT.HotText
+     source: Surpass.CQT.HotText
+     trigger:
+      branches:
+       include:
+         - 'refs/heads/master'
+   - pipeline: Surpass.CQT.DiagramCreator
+     source: Surpass.CQT.DiagramCreator
+     trigger:
+      branches:
+       include:
+         - 'refs/heads/master'
+   - pipeline: Surpass.CQT.Spreadsheet
+     source: Surpass.CQT.Spreadsheet
+     trigger:
+      branches:
+       include:
+         - 'refs/heads/master'
+
+   - pipeline: Surpass.CQT.Table
+     source:  Surpass.CQT.Table
+     trigger:
+      branches:
+       include:
+       - 'refs/heads/master'
+pool:
+  name: 'Default'
+  demands:
+   - Agent.Name -equals BTL068
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  APPLITOOLS_API_KEY: 'F2aZpZm9e7a9DQR5kC100NFCgZf6ASuH7wFGa2Cc7t95s110'
+  azureBuildNumber: $[variables['Build.BuildNumber']]
+  resourcetrigger: $[variables['Build.Reason']]
+  resourcepipelinename: $[variables['resources.triggeringalias']]  
+
+stages:
+  # #----------------------------------------------Graph Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_Graph_Automation_solution
+      displayName: Run Graph Automation solution
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.Graph')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Run Graph Automation solution
+
+         steps:
+         - task: NuGetToolInstaller@1
+        
+         - script: 
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+        
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.Graph.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing Graph CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+#----------------------------------------------Pie Chart Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_Piechart_Automation_solution
+      displayName: Piechart TestAutomation
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Piechart Test Automation solution
+
+         steps:
+
+         - task: NuGetToolInstaller@1
+        
+         - script: 
+         #|
+          #  #echo building $(Build.Reason)
+          #  #echo checking $(resources.triggeringalias)
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.Piechart.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing PieChart CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+#----------------------------------------------Hot Text Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_HotText_Automation_solution
+      displayName: Run HotText Automation solution
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.HotText')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Run HotText Automation solution
+
+         steps:
+
+         - task: NuGetToolInstaller@1
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.HotText.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing HotText CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+#----------------------------------------------Bar Chart Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_Barchart_Automation_solution
+      displayName: Barchart Test Automation solution
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.BarChart')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Barchart Test Automation solution
+
+         steps:
+         - task: NuGetToolInstaller@1
+        
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.BarChart.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing BarChart CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+#----------------------------------------------GraphSelector CQT Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_GraphSelector_Automation_solution
+      displayName: Run GraphSelector Automation solution
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.GraphSelector')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Run GraphSelector Automation solution
+
+         steps:
+
+         - task: NuGetToolInstaller@1
+        
+         - script: 
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.GraphSelector.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing GraphSelector CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+# #----------------------------------------------Diagram Creator Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_DiagramCreator_Automation_solution
+      displayName: Run Diagram Creator Automation solution
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.DiagramCreator')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Run Diagram Creator Automation solution
+
+         steps:
+         - task: NuGetToolInstaller@1
+        
+         - script: 
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+        
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.DiagramCreator.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing Diagram creator CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+# #----------------------------------------------Spreadsheet Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_Spreadsheet_Automation_solution
+      displayName: Run Spreadsheet Automation solution
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.Spreadsheet')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Run Spreadsheet Automation solution
+
+         steps:
+         - task: NuGetToolInstaller@1
+        
+         - script: 
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+        
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.Spreadsheet.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing Spreadhseet CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+# #----------------------------------------------Table Automation---------------------------------------------------------------------------------------------------
+    - stage: Run_table_Automation_solution
+      displayName: Run table Automation solution
+      #condition: and(eq(variables.resourcetrigger, 'ResourceTrigger') , eq(variables.resourcepipelinename, 'Surpass.CQT.PieChart'))
+      #condition: eq(variables.resourcepipelinename, 'Surpass.CQT.Table')
+      
+      jobs:        
+       - job: BuildAutomationpackage
+         displayName: Run table Automation solution
+
+         steps:
+         - task: NuGetToolInstaller@1
+        
+         - script: 
+
+         - task: NuGetCommand@2
+           inputs:
+            restoreSolution: '$(solution)'
+        
+         - task: ApplitoolsBuildTask@0
+
+         - task: VSBuild@1
+           inputs:
+            solution: '$(solution)'
+            msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip" /p:DeployIisAppPath="Default Web Site"'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
+
+         - task: VSTest@2
+           inputs:
+            testSelector: 'testAssemblies'
+            testAssemblyVer2: |
+              **\CQT.Table.Automation.dll
+              !**\*TestAdapter.dll
+              !**\obj\**
+            searchFolder: '$(System.DefaultWorkingDirectory)'
+            runTestsInIsolation: true
+            codeCoverageEnabled: true
+            testRunTitle: 'Testing Table CQT'
+            platform: '$(buildPlatform)'
+            configuration: '$(buildConfiguration)'
